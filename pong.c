@@ -10,6 +10,33 @@ int player1_score = 0, player2_score = 0;
 int racket_left_y = 11, racket_right_y = 11;
 int ball_x = 0, ball_y = 11;
 
+// withdrawal of points
+void print_score() {
+    printf("-------------- Player 1 -------------- || -------------- Player 2 --------------\n\n");
+    if (player1_score < 10 && player2_score < 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                    %d                   \n\n", player2_score);
+    } else if (player1_score < 10 && player2_score >= 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                    %d                  \n\n", player2_score);
+    } else if (player1_score >= 10 && player2_score < 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                   %d                   \n\n", player2_score);;
+    } else if (player1_score >= 10 && player2_score >= 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                   %d                  \n\n", player2_score);;
+    } else if (player1_score == 21 || player2_score == 21) {
+        //вызов функции(1)
+    }
+}
+
+void score(int number) {
+    if (number)
+        player1_score++;
+    else
+        player2_score++;
+}
+
 // drawing field boundaries
 
 void horizontal_border_rendering() {
@@ -19,7 +46,7 @@ void horizontal_border_rendering() {
 }
 
 void vertical_border_rendering() {
-    printf("|");
+    printf("." );
 }
 
 // drawing racket movement
@@ -81,6 +108,25 @@ int action_check() {
     return (command == ' ');
 }
 
+void goal_check() {
+    if (ball_x < 0 || ball_x >= 74) {
+        if (right_move) {
+            score(0);
+            ball_x = 0;
+            right_move = 0;
+        } else {
+            score(1);
+            ball_x = 74;
+            right_move = 1;
+        }
+        ball_y = 11;
+        racket_left_y = 11;
+        racket_right_y = 11;
+        corner30 = 0;
+        corner45 = 0;
+    }
+}
+
 int coordinate_calculation() {
     // x coordinate change
     if (action_check()) {
@@ -105,6 +151,7 @@ int coordinate_calculation() {
         }
         if (ball_y < 1 || ball_y >= 22)
             down *= -1;
+        goal_check();
     }
 }
 
@@ -125,8 +172,9 @@ void field_inner_part_rendering(int y) {
 
 void rendering() {
     int left = 1, right = 0;
-    system("cls");
+    system("clear");
     coordinate_calculation();
+    print_score();
     horizontal_border_rendering();
     for (char i = 0; i < lines - 2; i++) {
         vertical_border_rendering();
@@ -144,7 +192,7 @@ void event_handling() {
     rendering();
     //while(player1_score < 21 || player2_score < 21) {
     while (count < 200) {
-        scanf_s("%c", &command);
+        scanf("%c", &command);
         racket_movement();
         rendering();
         count++;
