@@ -1,129 +1,210 @@
 #include <stdio.h>
 #include <stdlib.h>
-void regulations();
-void menu();
-void menu1();
-void error();
-void exit1();
-void victory();
-void new_menu();
-int num;
-int num1;
-int main()
-{   
-    system("clear");
-    menu();
-    while(1){
-        switch(num){ 
-            case 1:
-                system("clear");
-                printf("Игра началась) \n");
-                victory();
-                new_menu();
-            break;
-            case 2:
-                system("clear");
-                regulations();
-                menu1();
-            break;
-            case 3:
-                system("clear");
-                exit1();
-            break;
-            case 4:
-                system("clear");
-                printf("Игра началась)\n");
-                menu();
-            break;
-            case 5:
-                system("clear");
-                exit1();
-            break;
-            default:
-                system("clear");
-                error();
-                exit1();
-            break;
+
+const char lines = 25, columns = 80, middle = 38;
+char corner30 = 0, corner45 = 0;
+char right_move = 1;
+char command;
+int right = 1, down = 1; // direction
+int player1_score = 0, player2_score = 0;
+int racket_left_y = 11, racket_right_y = 11;
+int ball_x = 0, ball_y = 11;
+
+// withdrawal of points
+void print_score() {
+    printf("-------------- Player 1 -------------- || -------------- Player 2 --------------\n\n");
+    if (player1_score < 10 && player2_score < 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                    %d                   \n\n", player2_score);
+    }
+    else if (player1_score < 10 && player2_score >= 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                    %d                  \n\n", player2_score);
+    }
+    else if (player1_score >= 10 && player2_score < 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                   %d                   \n\n", player2_score);;
+    }
+    else if (player1_score >= 10 && player2_score >= 10) {
+        printf("                  %d                     ", player1_score);
+        printf("                   %d                  \n\n", player2_score);;
+    }
+    else if (player1_score == 21 || player2_score == 21) {
+        //вызов функции(1)
+    }
+}
+
+void score(int number) {
+    if (number)
+        player1_score++;
+    else
+        player2_score++;
+}
+
+// drawing field boundaries
+
+void horizontal_border_rendering() {
+    for (char i = 0; i < columns; i++)
+        printf("-");
+    printf("\n");
+}
+
+void vertical_border_rendering() {
+    printf(".");
+}
+
+// drawing racket movement
+
+int checking() {
+    if (command == 'a' || command == 'A')
+        return (command == 'a' || command == 'A');
+    if (command == 'z' || command == 'Z')
+        return (command == 'z' || command == 'Z');
+    if (command == 'm' || command == 'M')
+        return (command == 'm' || command == 'M');
+    if (command == 'k' || command == 'K')
+        return (command == 'k' || command == 'K');
+    return (command == ' ');
+}
+
+void racket_movement() {
+    if (checking()) {
+        if ((command == 'a' || command == 'A') && !right_move && racket_left_y > 1)
+            racket_left_y--;
+        else if ((command == 'z' || command == 'Z') && !right_move && racket_left_y < 21)
+            racket_left_y++;
+        else if ((command == 'k' || command == 'K') && right_move && racket_right_y > 1)
+            racket_right_y--;
+        else if ((command == 'm' || command == 'M') && right_move && racket_right_y < 21)
+            racket_right_y++;
+    }
+}
+
+void racket_rendering(int y, int number) {
+    if (number) {
+        if ((racket_left_y - 1 <= y) && (y <= racket_left_y + 1))
+            printf("|");
+        else
+            printf(" ");
+    }
+    else {
+        if ((racket_right_y - 1 <= y) && (y <= racket_right_y + 1))
+            printf("|");
+        else
+            printf(" ");
+    }
+}
+
+// ball movement
+
+// checking that the player who owns the queue is moving
+int action_check() {
+    if (checking()) {
+        if (command == 'a' || command == 'A')
+            return ((command == 'a' || command == 'A') && !right_move);
+        else if (command == 'z' || command == 'Z')
+            return ((command == 'z' || command == 'Z') && !right_move);
+        else if (command == 'k' || command == 'K')
+            return ((command == 'k' || command == 'K') && right_move);
+        else if (command == 'm' || command == 'M')
+            return ((command == 'm' || command == 'M') && right_move);
+    }
+    return (command == ' ');
+}
+
+void goal_check() {
+    if (ball_x < 0 || ball_x > 75) {
+        if (right_move) {
+            score(1);
+            ball_x = 74;
         }
-    }   
+        else {
+            score(0);
+            ball_x = 0;
+        }
+        right *= -1;
+        right_move = !right_move;
+        racket_left_y = 11;
+        racket_right_y = 11;
+        ball_y = 11;
+        corner30 = 0;
+        corner45 = 0;
+    }
+}
+
+int coordinate_calculation() {
+    // x coordinate change
+    if (action_check()) {
+        ball_x += right;
+        if (corner30 && (2 <= ball_y && ball_y <= 22))
+            ball_y += down * 2;
+        else if (corner45 || ball_y < 2 || ball_y > 22)
+            ball_y += down;
+        if ((ball_x == 0 && (-1 <= ball_y - racket_left_y) && (ball_y - racket_left_y <= 1)) ||
+            (ball_x == columns - 5 && (-1 <= ball_y - racket_right_y) && (ball_y - racket_right_y <= 1))) {
+            right *= -1;
+            right_move = !right_move;
+            if (ball_y == racket_left_y || ball_y == racket_right_y) {
+                corner45 = 1;
+                corner30 = 0;
+            }
+            else if (ball_y == racket_left_y - 1 || ball_y == racket_left_y + 1 ||
+                ball_y == racket_right_y - 1 || ball_y == racket_right_y + 1) {
+                corner30 = 1;
+                corner45 = 0;
+            }
+        }
+        if (ball_y < 1 || ball_y >= 22)
+            down *= -1;
+        goal_check();
+    }
+}
+
+// drawing the inside of the field
+
+void field_inner_part_rendering(int y) {
+    for (char x = 0; x < columns - 4; x++) {
+        if (y == ball_y && x == ball_x)
+            printf("*");
+        else if (x == middle || x == middle - 1)
+            printf("|");
+        else
+            printf(" ");
+    }
+}
+
+// rendering of the whole game
+
+void rendering() {
+    int left = 1, right = 0;
+    system("cls");
+    coordinate_calculation();
+    print_score();
+    horizontal_border_rendering();
+    for (char i = 0; i < lines - 2; i++) {
+        vertical_border_rendering();
+        racket_rendering(i, left);
+        field_inner_part_rendering(i);
+        racket_rendering(i, right);
+        vertical_border_rendering();
+        printf("\n");
+    }
+    horizontal_border_rendering();
+}
+
+void event_handling() {
+    char count = 0;
+    rendering();
+    while (player1_score < 2 && player2_score < 2) {
+        scanf_s("%c", &command);
+        racket_movement();
+        rendering();
+    }
+    printf("Game over");
+}
+
+int main() {
+    event_handling();
     return 0;
 }
-void menu(){
-    printf ("                           PONG\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("|                   <1> Начало Игры                    |\n");
-    printf ("|                   <2> Правила Игры                   |\n");
-    printf ("|                   <3> Выход из игры                  |\n");
-    printf ("--------------------------------------------------------\n");
-    scanf("%d", &num);
-    
-}
-void menu1(){
-    printf ("                           PONG\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("|                   <1> Начало Игры                    |\n");
-    printf ("|               <2> Повторить Правила Игры?            |\n");
-    printf ("|                   <3> Выход из Игры                  |\n");
-    printf ("--------------------------------------------------------\n");
-    scanf("%d", &num);
-  
-}  
-void regulations() 
-{
-    printf ("--------------------------------------------------------\n");
-    printf ("|                 ПРАВИЛА ИГРЫ В PONG                  |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("| Игроки ходят по очереди.                             |\n");
-    printf ("| После удара ракеткой первого игрока ход передаётся   |\n");
-    printf ("| второму игрокую                                      |\n");
-    printf ("| Игра ведётся до набора одного из играков 21-го очка! |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("|                Управления ракетками                  |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("|     Первый Игрок         |         Второй игрок      |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("|      Вверх < A >         |          Вверх < K >      |\n");
-    printf ("|      Вниз  < Z >         |          Вниз  < M >      |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("| Пропуск хода осуществляется общей кнопкой ПРОБЕЛОМ!  |\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("--------------------------------------------------------\n");
-    printf ("| ПРИ НАЖАТИЕ ЛЮБЫХ ДРУГИХ КНОПАК, ИГРА УМИРАЕТ!       |\n");
-    printf ("--------------------------------------------------------\n");
-}
-       
-void error(){
-    printf ("--------------------------------------------------------\n");
-    printf ("| Что-то пошло не так!                                 |\n");
-    printf ("| Прошу прочитай внимательно правила!                  |\n");
-    printf ("| Следуйте правилам и не нажимайте ничего лишнего!     |\n");
-    printf ("| Запустите игру заново!                                |\n");
-    printf ("--------------------------------------------------------\n");
-}
-void victory(){
-    printf ("--------------------------------------------------------\n");
-    printf("| Поздравляю с победой Игрок 1/2!                        |\n");
-    printf("| Не хотите ещё сыграть в Pong?                          |\n");
-    printf ("--------------------------------------------------------\n");
-}
-void new_menu(){
-    printf ("--------------------------------------------------------\n");
-    printf("|                   < 4 > Новая Игра                     |\n");
-    printf("|                   < 5 > Выйти из Игры                  |\n");
-    printf ("--------------------------------------------------------\n");
-    scanf("%d", &num);
-   
-}
-void exit1(){
-    exit(0);
-}
-/*int main(){
-    int a = 0;
-    int x = scanf("%d", &a);
-    if (x != 1)
-    {
-        printf("n/a");
-    }
-      printf("jr");
-return 0;
-}*/
+
