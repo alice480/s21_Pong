@@ -8,7 +8,7 @@ char command;
 int right = 1, down = 1; // direction
 int player1_score = 0, player2_score = 0;
 int racket_left_y = 11, racket_right_y = 11;
-int ball_x = 0, ball_y = 11;   
+int ball_x = 0, ball_y = 11;
 
 // drawing field boundaries
 
@@ -38,13 +38,13 @@ int checking() {
 
 void racket_movement() {
     if (checking()) {
-        if ((command == 'a' || command == 'A') && !right_move)
+        if ((command == 'a' || command == 'A') && !right_move && racket_left_y > 1)
             racket_left_y--;
-        else if ((command == 'z' || command == 'Z') && !right_move)
+        else if ((command == 'z' || command == 'Z') && !right_move && racket_left_y < 21)
             racket_left_y++;
-        else if ((command == 'k' || command == 'K') && right_move)
+        else if ((command == 'k' || command == 'K') && right_move && racket_right_y > 1)
             racket_right_y--;
-        else if ((command == 'm' || command == 'M') && right_move)
+        else if ((command == 'm' || command == 'M') && right_move && racket_right_y < 21)
             racket_right_y++;
     }
 }
@@ -85,24 +85,25 @@ int coordinate_calculation() {
     // x coordinate change
     if (action_check()) {
         ball_x += right;
+        if (corner30 && (2 <= ball_y && ball_y <= 22))
+            ball_y += down * 2;
+        else if (corner45 || ball_y < 2 || ball_y > 22)
+            ball_y += down;
+
         if (ball_x == 0 || ball_x == columns - 5) {
             right *= -1;
             right_move = !right_move;
+            if (ball_y == racket_left_y || ball_y == racket_right_y) {
+                corner45 = 1;
+                corner30 = 0;
+            }
+            else if (ball_y == racket_left_y - 1 || ball_y == racket_left_y + 1 ||
+                ball_y == racket_right_y - 1 || ball_y == racket_right_y + 1) {
+                corner30 = 1;
+                corner45 = 0;
+            }
         }
-        if (ball_y == racket_left_y || ball_y == racket_right_y) {
-            corner45 = 1;
-            corner30 = 0;
-        }
-        else if (ball_y == racket_left_y - 1 || ball_y == racket_left_y + 1 ||
-                 ball_y == racket_right_y - 1 || ball_y == racket_right_y + 1) {
-            corner30 = 1;
-            corner45 = 0;
-        }
-        if (corner30 && (2 <= ball_y && ball_y <= 24))
-            ball_y += down * 2;
-        else if (corner45 || ball_y < 2 || ball_y > 24)
-            ball_y += down;
-        if (ball_y <= 1 || ball_y >= 24)
+        if (ball_y < 1 || ball_y >= 22)
             down *= -1;
     }
 }
@@ -124,7 +125,7 @@ void field_inner_part_rendering(int y) {
 
 void rendering() {
     int left = 1, right = 0;
-    system("clear");
+    system("cls");
     coordinate_calculation();
     horizontal_border_rendering();
     for (char i = 0; i < lines - 2; i++) {
@@ -142,8 +143,8 @@ void event_handling() {
     char count = 0;
     rendering();
     //while(player1_score < 21 || player2_score < 21) {
-    while(count < 200) {
-        scanf("%c", &command);
+    while (count < 200) {
+        scanf_s("%c", &command);
         racket_movement();
         rendering();
         count++;
