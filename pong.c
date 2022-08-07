@@ -4,38 +4,11 @@
 const char lines = 25, columns = 80, middle = 38;
 char corner30 = 0, corner45 = 0;
 char right_move = 1;
+char command;
 int right = 1, down = 1; // direction
 int player1_score = 0, player2_score = 0;
 int racket_left_y = 11, racket_right_y = 11;
-int ball_x = 0, ball_y = 11;
-
-// ball movement
-
-
-int coordinate_calculation() {
-    // x coordinate change
-    ball_x += right;
-    if (ball_x == 0 || ball_x == columns - 5) {
-        right *= -1;
-        right_move = !right_move;
-    }
-        /*if (ball_y == racket_left_y || ball_y == racket_right_y) {
-            corner45 = 1;
-            corner30 = 0;
-        }
-        else if (ball_y == racket_left_y - 1 || ball_y == racket_left_y + 1 ||
-                 ball_y == racket_right_y - 1 || ball_y == racket_right_y + 1) {
-            corner30 = 1;
-            corner45 = 0;
-        }
-    }
-    if (corner30)
-        ball_y += down * 2;
-    else if (corner45)
-        ball_y += down;
-    if (ball_y == 1 || ball_y == lines - 2)
-        down *= -1;*/
-}
+int ball_x = 0, ball_y = 11;   
 
 // drawing field boundaries
 
@@ -51,7 +24,7 @@ void vertical_border_rendering() {
 
 // drawing racket movement
 
-int checking(char command) {
+int checking() {
     if (command == 'a' || command == 'A')
         return (command == 'a' || command == 'A');
     if (command == 'z' || command == 'Z')
@@ -63,8 +36,8 @@ int checking(char command) {
     return (command == ' ');
 }
 
-void racket_movement(char command) {
-    if (checking(command)) {
+void racket_movement() {
+    if (checking()) {
         if ((command == 'a' || command == 'A') && !right_move)
             racket_left_y--;
         else if ((command == 'z' || command == 'Z') && !right_move)
@@ -88,6 +61,49 @@ void racket_rendering(int y, int number) {
             printf("|");
         else
             printf(" ");
+    }
+}
+
+// ball movement
+
+// checking that the player who owns the queue is moving
+int action_check() {
+    if (checking()) {
+        if (command == 'a' || command == 'A')
+            return ((command == 'a' || command == 'A') && !right_move);
+        else if (command == 'z' || command == 'Z')
+            return ((command == 'z' || command == 'Z') && !right_move);
+        else if (command == 'k' || command == 'K')
+            return ((command == 'k' || command == 'K') && right_move);
+        else if (command == 'm' || command == 'M')
+            return ((command == 'm' || command == 'M') && right_move);
+    }
+    return (command == ' ');
+}
+
+int coordinate_calculation() {
+    // x coordinate change
+    if (action_check()) {
+        ball_x += right;
+        if (ball_x == 0 || ball_x == columns - 5) {
+            right *= -1;
+            right_move = !right_move;
+        }
+        if (ball_y == racket_left_y || ball_y == racket_right_y) {
+            corner45 = 1;
+            corner30 = 0;
+        }
+        else if (ball_y == racket_left_y - 1 || ball_y == racket_left_y + 1 ||
+                 ball_y == racket_right_y - 1 || ball_y == racket_right_y + 1) {
+            corner30 = 1;
+            corner45 = 0;
+        }
+        if (corner30 && (2 <= ball_y && ball_y <= 24))
+            ball_y += down * 2;
+        else if (corner45 || ball_y < 2 || ball_y > 24)
+            ball_y += down;
+        if (ball_y <= 1 || ball_y >= 24)
+            down *= -1;
     }
 }
 
@@ -123,12 +139,12 @@ void rendering() {
 }
 
 void event_handling() {
-    char command, count = 0;
+    char count = 0;
     rendering();
     //while(player1_score < 21 || player2_score < 21) {
     while(count < 200) {
         scanf("%c", &command);
-        racket_movement(command);
+        racket_movement();
         rendering();
         count++;
     }
